@@ -1,133 +1,98 @@
-#include <bits/stdc++.h> 
-#define input freopen("in.txt", "r", stdin)
+#include <bits/stdc++.h>
+#define input freopen("inTrie.txt", "r", stdin)
 #define output freopen("out.txt", "w", stdout)
-#include <bits/stdc++.h> 
-#define input freopen("in.txt", "r", stdin)
-#define output freopen("out.txt", "w", stdout)
-// Variables
-#define MAX_N 100010
+using namespace std;
 
-using namespace std; 
+struct node
+{
+    char currentCharacter;
+    bool endOfWord;
+    node *children[10];
+    node()
+    {
+        endOfWord = false;
+        for (int i = 0; i < 10; i++)
+        {
+            children[i] = NULL;
+        }
+    }
+};
 
-// Variables static
-
-int n, a[MAX_N];
-
-int gcd(int a, int b) {
-    if (b == 0) return a;
-    return gcd(b, a % b);
-}
-
-struct node{
-    int sum, mult , min, max, gcd;
-}segmentTree[MAX_N*2];
-
-void init(int inicio, int final, int nodoActual) { 
-    if( inicio == final ) {
-        segmentTree[nodoActual].max = a[inicio];
-        segmentTree[nodoActual].min = a[inicio];
-        segmentTree[nodoActual].sum = a[inicio];
-        segmentTree[nodoActual].gcd = a[inicio];
-    } else {
-        int mid = (inicio + final) / 2; 
-        int nodoIzquierdo = 2 * nodoActual + 1; 
-        int nodoDerecho   = 2 * nodoActual + 2;
-        // Ir por lado izquierdo
-        init(inicio, mid, nodoIzquierdo );
-        // Ir por lado derecho 
-        init(mid+1, final, nodoDerecho);
-
-        segmentTree[nodoActual].sum = segmentTree[nodoIzquierdo].sum + segmentTree[nodoDerecho].sum;
-        segmentTree[nodoActual].max = max(segmentTree[nodoIzquierdo].max,  segmentTree[nodoDerecho].max);
-        segmentTree[nodoActual].min = min(segmentTree[nodoIzquierdo].min, segmentTree[nodoDerecho].min);
-        segmentTree[nodoActual].gcd = gcd(segmentTree[nodoIzquierdo].gcd, segmentTree[nodoDerecho].gcd);
-    } 
-}
-
-
-node query(int inicio, int final, int nodoActual, int izquierda, int derecha ) {
-    if(inicio >= izquierda && final <= derecha ) {
-        return segmentTree[nodoActual];
+bool isNumber, isCreated;
+void insert(node *trie, string word)
+{
+    
+    node *currentNode = trie;
+    
+    for (int i = 0; i < word.size(); i++)
+    {
+        int index = word[i] - '0';
+        if (currentNode->children[index] == NULL)
+        {
+            isCreated = true;
+            currentNode->children[index] = new node();
+        }
+        currentNode = currentNode->children[index];
+        if(currentNode->endOfWord){
+            isNumber = true;
+        }
+        currentNode->currentCharacter = word[i];
+    }
+    if(isCreated && !isNumber) {
+        currentNode->endOfWord = true;
     }
     
-    int mid = (inicio + final ) / 2; 
-    int nodoIzquierdo = 2 * nodoActual + 1; 
-    int nodoDerecho   = 2 * nodoActual + 2;
+}
 
-    if(derecha <= mid ) {
-        return query(inicio, mid, nodoIzquierdo, izquierda, derecha); 
-    } else if(izquierda > mid) {
-        return query(mid+1, final, nodoDerecho, izquierda, derecha);
+bool search(node *trie, string word)
+{
+    node *currentNode = trie;
+    for (int i = 0; i < word.size(); i++)
+    {
+        int index = word[i] - '0';
+        if (currentNode->children[index] == NULL)
+        {
+            return false;
+        }
+        currentNode = currentNode->children[index];
+    }
+    return currentNode->endOfWord;
+}
+
+int main()
+{
+    // input;
+    int wordsNumber;
+    cin >> wordsNumber;
+
+    node *trie = new node();
+
+    while (wordsNumber--)
+    {
+        string word;
+        cin >> word;
+        isNumber = false;
+        isCreated = false;
+        insert(trie, word);
+        cout<<isNumber<<" "<<isCreated<<endl;
+    }
+    
+    if(search(trie,"1123")){
+        cout<<"existe el 1123"<<endl;
     } else {
-        node maxIzquierdo = query(inicio, mid, nodoIzquierdo,izquierda,derecha);
-        node maxDerecho   = query(mid+1, final, nodoDerecho,izquierda,derecha);
-
-        node result ; 
-        result.max = max(maxIzquierdo.max, maxDerecho.max);
-        result.min = min(maxIzquierdo.min, maxDerecho.min); 
-        result.gcd = gcd(maxIzquierdo.gcd, maxDerecho.gcd); 
-        return result;
-    }      
-}
-
-void update(int inicio, int final, int nodoActual, int posicion, int valor ) {
-    if(posicion < inicio || posicion > final ) {
-        return ;
+        cout<<"no existe el 1123"<<endl;
     }
-
-    if( inicio == final ) {
-        segmentTree[nodoActual].max = valor;
-        segmentTree[nodoActual].min = valor;
-        segmentTree[nodoActual].sum = valor;
-    } else { 
-
-        int mid = (inicio + final ) / 2; 
-        int nodoIzquierdo = 2 * nodoActual + 1; 
-        int nodoDerecho   = 2 * nodoActual + 2;
-        // Actualizar por lado izquierdo
-        update(inicio, mid, nodoIzquierdo, posicion, valor );
-        // Actualizar por lado derecho 
-        update(mid+1, final, nodoDerecho, posicion, valor );
-
-        segmentTree[nodoActual].sum = segmentTree[nodoIzquierdo].sum + segmentTree[nodoDerecho].sum;
-        segmentTree[nodoActual].max = max(segmentTree[nodoIzquierdo].max,  segmentTree[nodoDerecho].max); // -inf
-        segmentTree[nodoActual].min = min(segmentTree[nodoIzquierdo].min, segmentTree[nodoDerecho].min);  // inf
-
+    
+    if(search(trie,"1")){
+        cout<<"existe el 1"<<endl;
+    } else {
+        cout<<"no existe el 1"<<endl;
     }
-}
-
-int main() {
+    
+    if(search(trie,"765179")){
+        cout<<"existe el 765179"<<endl;
+    } else {
+        cout<<"no existe el 765179"<<endl;
+    }
 
 }
-    input;
-    cin>>n;
-    for(int i = 0; i < n; i++) {
-        cin>>a[i];
-    }
-    // Inicializar Segment Tree 
-    init(0,n -1, 0);    
-
-    for(int i=0;i<2*n;i++) {
-        cout<<"[ "<<segmentTree[i].sum<<" ]";
-    }
-    cout<<endl;
-    int queries;
-    cin>> queries; 
-    for(int i = 0 ;i <queries ; i++) {
-        int izquierda, derecha; 
-        cin>> izquierda >> derecha; 
-        cout<<"El maximo de "<<izquierda<<" y "<< derecha << " es: "<<query(0,n-1,0,izquierda,derecha).max<<endl;
-    }
-
-    update(0,n-1,0,5,8);
-    cout<<"El maximo de "<<0<<" y "<< 6 << " es: "<<query(0,n-1,0,0,6).max<<endl;
-
-
-
-
-    /* if('max' == consulta) {
-
-    }*/
-    return 0;
-}
-
